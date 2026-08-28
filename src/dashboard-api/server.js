@@ -105,7 +105,60 @@ app.get('/api/transaction/:id', async (req, res) => {
     res.status(500).json({ error: 'Failed to generate explanation' });
   }
 });
+// ---------- MODEL EVALUATION ----------
+// Evaluates the deterministic risk engine against the locked test set.
 
+app.get('/api/evaluation', (req, res) => {
+  let truePositive = 0;
+  let falsePositive = 0;
+  let trueNegative = 0;
+  let falseNegative = 0;
+
+  lockedTestData.forEach(txn => {
+    const features = featuresById[txn.transaction_id];
+    const riskResult = computeRiskScore(features, baseline);
+
+    const actualFraud = txn.scenario === 'CARD_TESTING';
+    const predictedFraud = riskResult.classification === 'HIGH';
+
+    if (actualFraud && predictedFraud) {
+      truePositive++;
+    } else if (actualFraud && !predictedFraud) {
+      falseNegative++;
+    } else if (!actualFraud && predictedFraud) {
+      falsePositive++;
+    } else {
+      trueNegative++;
+    }
+  });
+
+  const precision =
+    truePositive + falsePositive > 0
+      ? truePositive / (truePositive + falsePositive)
+      : 0;
+
+  const recall =
+    truePositive + falseNegative > 0
+      ? truePositive / (truePositive + falseNegative)
+      : 0;
+
+  const accuracy =
+    (truePositive + trueNegative) /
+    (truePositive + trueNegative + falsePositive + falseNegative);
+
+  res.json({
+    total: lockedTestData.length,
+    precision,
+    recall,
+    accuracy,
+    confusionMatrix: {
+      truePositive,
+      falsePositive,
+      trueNegative,
+      falseNegative
+    }
+  });
+});
 app.listen(PORT, () => {
   console.log(`Dashboard API running at http://localhost:${PORT}`);
 });
