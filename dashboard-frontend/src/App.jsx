@@ -9,11 +9,20 @@ import {
   YAxis
 } from 'recharts';
 
+import {
+  BrowserRouter,
+  Routes,
+  Route,
+  Link
+} from 'react-router-dom';
+
+import Simulator from './Simulator';
+
 import './App.css';
 
 const API_BASE = 'http://localhost:4000/api';
 
-function App() {
+function Dashboard() {
   const [overview, setOverview] = useState(null);
   const [evaluation, setEvaluation] = useState(null);
   const [selectedTxn, setSelectedTxn] = useState(null);
@@ -148,9 +157,31 @@ function App() {
             <p>Real-Time Payment Risk Intelligence Center</p>
           </div>
 
-          <div className="snapshot-badge">
-            <span className="snapshot-dot" />
-            SYSTEM OPERATIONAL
+          <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
+            <Link
+              to="/simulator"
+              style={{
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: 8,
+                padding: '10px 15px',
+                borderRadius: 10,
+                border: '1px solid rgba(99,102,241,0.35)',
+                background: 'rgba(99,102,241,0.12)',
+                color: '#c7d2fe',
+                textDecoration: 'none',
+                fontSize: 11,
+                fontWeight: 800,
+                letterSpacing: '0.05em'
+              }}
+            >
+              ⚡ LIVE SIMULATOR
+            </Link>
+
+            <div className="snapshot-badge">
+              <span className="snapshot-dot" />
+              SYSTEM OPERATIONAL
+            </div>
           </div>
         </div>
       </header>
@@ -744,316 +775,18 @@ function App() {
               <>
                 {/* FINAL DECISION */}
 
-              {/* =====================================================
-    INCIDENT INTELLIGENCE
-    ===================================================== */}
+                <div className="detail-section">
+                  <h3>Final Policy Decision</h3>
 
-{/* TRANSACTION CONTEXT */}
-<div className="incident-context">
-  <div className="context-item">
-    <span>TRANSACTION</span>
-    <strong>{selectedTxn}</strong>
-  </div>
-
-  <div className="context-item">
-    <span>AMOUNT</span>
-    <strong>
-      ₹{Number(
-        overview.transactions.find(
-          (t) => t.transaction_id === selectedTxn
-        )?.amount || 0
-      ).toLocaleString()}
-    </strong>
-  </div>
-
-  <div className="context-item">
-    <span>IP ADDRESS</span>
-    <strong className="mono">
-      {overview.transactions.find(
-        (t) => t.transaction_id === selectedTxn
-      )?.ip || '—'}
-    </strong>
-  </div>
-
-  <div className="context-item">
-    <span>STATUS</span>
-    <strong>
-      {overview.transactions.find(
-        (t) => t.transaction_id === selectedTxn
-      )?.scenario === 'CARD_TESTING'
-        ? 'SUSPICIOUS ACTIVITY'
-        : 'NORMAL ACTIVITY'}
-    </strong>
-  </div>
-</div>
-
-{/* FINAL DECISION */}
-<div className="detail-section">
-  <div className="section-kicker">FINAL POLICY DECISION</div>
-
-  <div
-    className={`decision-banner ${detail.finalDecision.finalAction}`}
-  >
-    <span className="decision-dot" />
-    {detail.finalDecision.finalAction.replaceAll('_', ' ')}
-  </div>
-
-  <div className="decision-authority">
-    <div>
-      <span className="authority-label">DECISION AUTHORITY</span>
-      <strong>Deterministic Policy Gate</strong>
-    </div>
-
-    <div className="authority-flow">
-      <span>RISK ENGINE</span>
-      <span>→</span>
-      <span>GEMINI</span>
-      <span>→</span>
-      <span>POLICY GATE</span>
-    </div>
-  </div>
-</div>
-
-{/* RISK ASSESSMENT */}
-<div className="detail-section">
-  <div className="section-kicker">RISK ASSESSMENT</div>
-
-  <div className="risk-assessment-card">
-    <div
-      className="gauge"
-      style={{
-        background: `conic-gradient(
-          ${
-            detail.riskResult.classification === 'HIGH'
-              ? '#ef4444'
-              : detail.riskResult.classification === 'MEDIUM'
-              ? '#f59e0b'
-              : '#22c55e'
-          }
-          ${detail.riskResult.riskScore * 3.6}deg,
-          #202638 0deg
-        )`
-      }}
-    >
-      <div className="gauge-inner">
-        <span className="score">
-          {detail.riskResult.riskScore}
-        </span>
-        <span className="max">/100</span>
-      </div>
-    </div>
-
-    <div className="risk-summary">
-      <span className={`risk-level ${detail.riskResult.classification}`}>
-        {detail.riskResult.classification} RISK
-      </span>
-
-      <strong>
-        {detail.riskResult.riskScore >= 70
-          ? 'Immediate intervention required'
-          : detail.riskResult.riskScore >= 30
-          ? 'Requires additional monitoring'
-          : 'No significant fraud indicators'}
-      </strong>
-
-      <p>
-        This classification comes directly from the deterministic
-        risk engine. Gemini does not calculate or modify this score.
-      </p>
-    </div>
-  </div>
-</div>
-
-{/* RULES */}
-<div className="detail-section">
-  <div className="section-kicker">DETECTION SIGNALS</div>
-
-  {detail.riskResult.firedRules.length > 0 ? (
-    <div className="rule-chips">
-      {detail.riskResult.firedRules.map((rule) => (
-        <span className="rule-chip rule-chip-alert" key={rule}>
-          {rule}
-        </span>
-      ))}
-    </div>
-  ) : (
-    <div className="no-signals">
-      ✓ No deterministic fraud rules triggered
-    </div>
-  )}
-</div>
-
-{/* EVIDENCE */}
-<div className="detail-section">
-  <div className="section-kicker">BEHAVIORAL EVIDENCE</div>
-
-  <div className="evidence-grid">
-    <div className="item">
-      <div className="k">VELOCITY · 5 MIN</div>
-      <div className="v">
-        {detail.features.velocity5m} attempts
-      </div>
-    </div>
-
-    <div className="item">
-      <div className="k">UNIQUE CARDS</div>
-      <div className="v">
-        {detail.features.uniqueCards5m}
-      </div>
-    </div>
-
-    <div className="item">
-      <div className="k">BIN IP SOURCES</div>
-      <div className="v">
-        {detail.features.uniqueIPsForBin15m}
-      </div>
-    </div>
-
-    <div className="item">
-      <div className="k">DECLINE RATE</div>
-      <div className="v">
-        {(detail.features.declineRate15m * 100).toFixed(1)}%
-      </div>
-    </div>
-
-    <div className="item">
-      <div className="k">SMALL AMOUNT RATIO</div>
-      <div className="v">
-        {(detail.features.smallAmountRatio * 100).toFixed(1)}%
-      </div>
-    </div>
-
-    <div className="item">
-      <div className="k">VELOCITY ANOMALY</div>
-      <div className="v">
-        Z = {detail.riskResult.velocityZScore}
-      </div>
-    </div>
-
-    <div className="item">
-      <div className="k">DECLINE ANOMALY</div>
-      <div className="v">
-        Z = {detail.riskResult.declineZScore}
-      </div>
-    </div>
-
-    <div className="item">
-      <div className="k">RULE SCORE</div>
-      <div className="v">
-        {detail.riskResult.ruleScore}/100
-      </div>
-    </div>
-  </div>
-</div>
-
-{/* GEMINI */}
-<div className="ai-panel">
-  <div className="ai-panel-header">
-    ✦ GEMINI RISK ANALYSIS
-    <span className="ai-readonly">EVIDENCE ONLY</span>
-  </div>
-
-  <p>{detail.aiResult.explanation}</p>
-
-  <div className="ai-result-grid">
-    <div>
-      <span>AI CLASSIFICATION</span>
-      <strong>{detail.aiResult.classification}</strong>
-    </div>
-
-    <div>
-      <span>AI RECOMMENDATION</span>
-      <strong>
-        {detail.aiResult.recommended_action}
-      </strong>
-    </div>
-  </div>
-
-  <div className="ai-boundary">
-    <span>✓</span>
-    Gemini interprets verified evidence only. It does not
-    calculate the risk score or have final blocking authority.
-  </div>
-</div>
-
-{/* POLICY RESULT */}
-<div className="detail-section">
-  <div className="section-kicker">DECISION RATIONALE</div>
-
-  <div className="decision-rationale">
-    <div className="rationale-row">
-      <span>Risk engine</span>
-      <strong>
-        {detail.riskResult.riskScore}/100 ·{' '}
-        {detail.riskResult.classification}
-      </strong>
-    </div>
-
-    <div className="rationale-row">
-      <span>Gemini recommendation</span>
-      <strong>
-        {detail.aiResult.recommended_action}
-      </strong>
-    </div>
-
-    <div className="rationale-row final">
-      <span>Policy gate result</span>
-      <strong>
-        {detail.finalDecision.finalAction.replaceAll('_', ' ')}
-      </strong>
-    </div>
-  </div>
-</div>
-
-{/* OVERRIDE */}
-{detail.finalDecision.overrideReason && (
-  <div className="override-note">
-    <strong>⚠ POLICY OVERRIDE</strong>
-    <div style={{ marginTop: 7 }}>
-      {detail.finalDecision.overrideReason}
-    </div>
-  </div>
-)}
-
-{/* DECISION CHAIN */}
-<div className="detail-section">
-  <div className="section-kicker">DECISION CHAIN</div>
-
-  <div className="decision-chain">
-    <div className="chain-node">
-      <span>01</span>
-      TRANSACTION
-    </div>
-
-    <div className="chain-arrow">→</div>
-
-    <div className="chain-node">
-      <span>02</span>
-      FEATURES
-    </div>
-
-    <div className="chain-arrow">→</div>
-
-    <div className="chain-node">
-      <span>03</span>
-      RISK ENGINE
-    </div>
-
-    <div className="chain-arrow">→</div>
-
-    <div className="chain-node ai">
-      <span>04</span>
-      GEMINI
-    </div>
-
-    <div className="chain-arrow">→</div>
-
-    <div className="chain-node final">
-      <span>05</span>
-      POLICY GATE
-    </div>
-  </div>
-</div>
+                  <div
+                    className={`decision-banner ${detail.finalDecision.finalAction}`}
+                  >
+                    {detail.finalDecision.finalAction.replace(
+                      '_',
+                      ' '
+                    )}
+                  </div>
+                </div>
 
                 {/* RISK */}
 
@@ -1361,6 +1094,17 @@ function App() {
         </div>
       )}
     </div>
+  );
+}
+
+function App() {
+  return (
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<Dashboard />} />
+        <Route path="/simulator" element={<Simulator />} />
+      </Routes>
+    </BrowserRouter>
   );
 }
 
